@@ -1,0 +1,106 @@
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>Navigation system using d3</title>
+		<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto">
+		<link rel="stylesheet" href="https://cdn.jsdelivr.net/foundation-icons/3.0/foundation-icons.min.css">
+		<script src="https://d3js.org/d3.v4.min.js"></script>
+		<script src="http://d3js.org/topojson.v2.min.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.min.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/topojson/1.6.19/topojson.min.js"></script>
+		<script src="fisheye.js"></script>
+	</head>
+	<style>
+		.roads {
+		  fill: none;
+		  stroke-linejoin: round;
+		  stroke-linecap: round;
+		}
+
+		.major-highway { stroke: #525252; stroke-width: 1.5px; }
+		.secondary-highway { stroke: #737373; }
+		.road { stroke: #bdbdbd; }
+		.beltway { stroke: #737373; }
+		.ferry-route { stroke: #4393c3; stroke-width: 1.5px; }
+	</style>
+	<body>
+		<div class="heading">
+			<h1> <div class="yellow">Navigation</div> </h1>
+			<div class="intro">
+				<h3 class="yellow">Introduction</h3>
+				<p>
+					<a href=http://fortune.com/2016/08/16/tech-unicorns-valuation-fall>[ fact check! ]</a>. This webpage illuminates these economic changes through visual representations.</p>
+				<i class="fi-arrow-down small"></i>
+			</div>
+
+		</div>
+
+	<script>
+	var width = 960,
+    height = 600;
+
+	var projection = d3.geo.albersUsa()
+	    .scale(1100)
+	    .translate([width / 2, height / 2]);
+
+	var path = d3.geo.path()
+	    .projection(projection);
+
+	var svg = d3.select("body").append("svg")
+	    .attr("width", width)
+	    .attr("height", height);
+
+	var rawData
+
+	d3.json("usroads.json", function(error, usroads) {
+	  	if (error) throw error;
+
+		console.log(usroads.objects.usa)
+	  	svg.append("g")
+		.selectAll("path")
+		    .data(topojson.feature(usroads, usroads.objects.usa).features)
+		.enter().append("path")
+		    .attr("d", path)
+		 	.style("fill","none")
+		  	.style("stroke","#252525")
+		  	.style("stroke-width",1);
+
+	  	svg.append("g")
+		.selectAll("path")
+		 	.data(topojson.feature(usroads, usroads.objects.roads).features)
+		.enter().append("path")
+      		.attr("d", path)
+		    .attr("class",function(d) { return "roads " + d.properties.type.toLowerCase().split(' ').join('-'); });
+
+		circles.enter().append("circle")
+		.attr("cx", 1)
+		.attr("cy", 1)
+		.attr("r", 3)
+
+	});
+
+	d3.select(self.frameElement).style("height", height + "px");
+
+	var fisheye = d3.fisheye.circular()
+	    .radius(200)
+	    .distortion(2);
+
+	svg.on("mousemove", function() {
+  		fisheye.focus(d3.mouse(this));
+
+  		node.each(function(d) { d.fisheye = fisheye(d); })
+	    	.attr("cx", function(d) { return d.fisheye.x; })
+	      	.attr("cy", function(d) { return d.fisheye.y; })
+	      	.attr("r", function(d) { return d.fisheye.z * 4.5; });
+
+  		link.attr("x1", function(d) { return d.source.fisheye.x; })
+      		.attr("y1", function(d) { return d.source.fisheye.y; })
+      		.attr("x2", function(d) { return d.target.fisheye.x; })
+      		.attr("y2", function(d) { return d.target.fisheye.y; });
+});
+
+	</script>
+
+
+	</body>
+</html>
